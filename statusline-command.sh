@@ -165,7 +165,10 @@ always="${seg_header}${SEP}${seg_model}"
 [ -n "$seg_5h" ] && always="${always}${SEP}${seg_5h}"
 always="${always}${SEP}${seg_peak}"
 
-term_w=${COLUMNS:-$(tput cols 2>/dev/null || echo 120)}
+# tput cols may return 80 in subprocess context; use stty as fallback
+term_w=${COLUMNS:-$(tput cols 2>/dev/null || echo 0)}
+[ "$term_w" -le 80 ] 2>/dev/null && term_w=$(stty size 2>/dev/null | awk '{print $2}')
+[ -z "$term_w" ] || [ "$term_w" -le 0 ] 2>/dev/null && term_w=200
 
 # Full output: always + tier2 + tier3
 output="$always"
