@@ -74,6 +74,12 @@ et_hour=${et_hour#0}
 [ -z "$et_hour" ] && et_hour=0
 et_dow=$(TZ="America/New_York" date +%u)
 
+# Compute local hour equivalent of 8am ET (peak start in user's timezone)
+et_8=$(TZ="America/New_York" date -j -f "%H" "08" +%s 2>/dev/null || TZ="America/New_York" date -d "today 08:00" +%s 2>/dev/null)
+local_peak_start=$(date -r "$et_8" +%H 2>/dev/null || date -d "@$et_8" +%H 2>/dev/null || echo "14")
+local_peak_start=${local_peak_start#0}
+[ -z "$local_peak_start" ] && local_peak_start=0
+
 if [ "$et_dow" -le 5 ] && [ "$et_hour" -ge 8 ] && [ "$et_hour" -lt 14 ]; then
   hours_left=$((14 - et_hour))
   seg_peak="\033[1;31m⚡ PEAK\033[0m \033[90m(~${hours_left}h left)\033[0m"
@@ -81,7 +87,7 @@ else
   if [ "$et_dow" -eq 6 ] || [ "$et_dow" -eq 7 ] || { [ "$et_dow" -eq 5 ] && [ "$et_hour" -ge 14 ]; }; then
     seg_peak="\033[1;32m✦ OFF-PEAK\033[0m \033[90m(weekend)\033[0m"
   elif [ "$et_hour" -ge 14 ]; then
-    seg_peak="\033[1;32m✦ OFF-PEAK\033[0m \033[90m(until 8am ET)\033[0m"
+    seg_peak="\033[1;32m✦ OFF-PEAK\033[0m \033[90m(until ${local_peak_start}h)\033[0m"
   else
     hours_until=$((8 - et_hour))
     seg_peak="\033[1;32m✦ OFF-PEAK\033[0m \033[90m(peak in ~${hours_until}h)\033[0m"
