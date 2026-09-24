@@ -1,6 +1,13 @@
 #!/bin/sh
 # Claude Code status line v2 - Intelligent contextual layout
 # https://github.com/Para-FR/claude-statusline
+
+# JSON numbers always use a dot as decimal separator (RFC 8259), but printf
+# follows LC_NUMERIC. Under a locale such as fr_FR, printf '%.2f' rejects
+# "0.42" and yields 0,00. Only the numeric category is neutralised, so the
+# UTF-8 glyphs below still render.
+export LC_NUMERIC=C
+
 input=$(cat)
 
 # --- Bulk JSON extraction (single jq call) ---
